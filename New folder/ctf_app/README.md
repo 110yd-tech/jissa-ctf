@@ -72,7 +72,6 @@ Ensure your firewall allows incoming connections on port `5000` (TCP). if partic
 | **Dashboard** | Score, rank, challenge list, flag submission |
 | **Leaderboard** | Public, sorted by score (tiebreak: earliest solve) |
 | **Flag Engine** | SHA-256 hashed flags, one-solve-per-challenge |
-| **Rate Limiting** | Max 5 flag submissions per minute per user |
 | **Admin Panel** | Manage challenges, users, scores, view all logs |
 | **Login Auditing** | IP + success/failure logged for every login |
 

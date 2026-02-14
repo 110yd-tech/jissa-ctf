@@ -31,8 +31,7 @@
     <div class="challenges-grid">
         {% if challenges %}
         {% for ch in challenges %}
-        <a href="{{ url_for('challenge_detail', challenge_id=ch['id']) }}"
-            class="challenge-card {{ 'solved' if ch['id'] in solved_ids else '' }}">
+        <div class="challenge-card {{ 'solved' if ch['id'] in solved_ids else '' }}">
             <div class="card-header">
                 <h4>{{ ch['name'] }}</h4>
                 <span class="badge">{{ ch['category'] or 'Misc' }}</span>
@@ -45,7 +44,17 @@
                 <div class="status">Unsolved</div>
                 {% endif %}
             </div>
-        </a>
+            <div class="card-actions">
+                <a href="{{ url_for('challenge_detail', challenge_id=ch['id']) }}" class="btn btn-primary btn-sm">
+                    View
+                </a>
+                {% if ch['download_path'] %}
+                <a href="{{ url_for('download_challenge', challenge_id=ch['id']) }}" class="btn btn-success btn-sm">
+                    Download
+                </a>
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
         {% else %}
         <p style="color:var(--muted);width:100%;">No challenges available yet. Stay tuned!</p>
@@ -66,7 +75,6 @@
             padding: 1.5rem;
             display: block;
             transition: transform 0.2s, border-color 0.2s;
-            text-decoration: none !important;
         }
 
         .challenge-card:hover {
@@ -104,6 +112,12 @@
         .challenge-card .status {
             font-size: 0.9rem;
             color: var(--muted);
+        }
+
+        .challenge-card .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
         }
 
         .challenge-card.solved {

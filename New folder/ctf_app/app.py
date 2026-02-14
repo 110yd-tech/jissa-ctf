@@ -29,7 +29,7 @@ if os.path.exists(env_path):
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    session, flash, g, abort, Response
+    session, flash, g, abort, Response, send_from_directory
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -55,40 +55,9 @@ if not ADMIN_PASSWORD:
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
-DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ctf.db")
-
-# ---------------------------------------------------------------------------
-# Rate Limiting (in-memory)
-# ---------------------------------------------------------------------------
-
-# SECURITY: Simple per-user rate limiter to prevent flag brute-forcing.
-# Structure: { user_id: [timestamp, timestamp, ...] }
-_submission_timestamps: dict[int, list[float]] = {}
-RATE_LIMIT_MAX = 5          # max submissions
-RATE_LIMIT_WINDOW = 60      # per this many seconds
-
-
-def _is_rate_limited(user_id: int) -> bool:
-    """Return True if the user has exceeded the submission rate limit."""
-    now = time.time()
-    # Prune old timestamps outside the window
-    # Safe usage with .get() defaulting to empty list
-    timestamps = _submission_timestamps.get(user_id, [])
-    
-    valid_timestamps = [
-        ts for ts in timestamps
-        if now - ts < RATE_LIMIT_WINDOW
-    ]
-    _submission_timestamps[user_id] = valid_timestamps
-    
-    return len(valid_timestamps) >= RATE_LIMIT_MAX
-
-
-def _record_submission(user_id: int) -> None:
-    """Record a submission timestamp for rate-limiting purposes."""
-    if user_id not in _submission_timestamps:
-        _submission_timestamps[user_id] = []
-    _submission_timestamps[user_id].append(time.time())
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, "ctf.db")
+DOWNLOADS_DIR = os.path.join(BASE_DIR, "downloads")
 
 # ---------------------------------------------------------------------------
 # Database Helpers
@@ -179,6 +148,11 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         db.execute("ALTER TABLE challenges ADD COLUMN target_url TEXT DEFAULT ''")
 
+    try:
+        db.execute("SELECT download_path FROM challenges LIMIT 1")
+    except sqlite3.OperationalError:
+        db.execute("ALTER TABLE challenges ADD COLUMN download_path TEXT DEFAULT ''")
+
     db.close()
 
 
@@ -189,53 +163,65 @@ def seed_challenges() -> None:
     """
     db = sqlite3.connect(DATABASE)
     
-    # (Name, FlagHash, Points, Description, Category, TargetURL)
-    builtin = [
+    # Reset challenges and submissions to match the new template set
+    db.execute("DELETE FROM submissions")
+    db.execute("DELETE FROM challenges")
+
+    # (Name, FlagHash, Points, Description, Category, TargetURL, DownloadPath)
+    templates = [
         (
-            "Robots Recon", 
-            hash_flag("FLAG{robots_are_not_security}"), 
+            "Challenge 1",
+            hash_flag("flag{f4ke_ext3ns10n_ezpz}"),
             100,
-            "Robots can be helpful, but sometimes they reveal too much about a site's structure. Check for hidden files.",
-            "Web",
-            None
+            "things arent what theyy seem :( ",
+            "Forensics",
+            "",
+            "challenge-1/challenge-1.zip",
         ),
         (
-            "Employee Portal Breach", 
-            hash_flag("FLAG{sql_injection_success}"), 
+            "Challenge 2",
+            hash_flag("flag{http_n0t_s3cur3D}"),
+            150,
+            "i wonder why http isnt safe?",
+            "Forensics",
+            "",
+            "challenge-2/challenge-2.zip",
+        ),
+        (
+            "Challenge 3",
+            hash_flag("flag{th3_c4t_1S_4_LI3}"),
             200,
-            "The employee portal seems to have a weak login system. Can you bypass it and access the panel?",
-            "Web",
-            "/employee-login"
+            "hiddeni n plain sight?",
+            "Forensics",
+            "",
+            "challenge-3/challenge-3.zip",
         ),
         (
-            "Midnight VIP Access",
-            hash_flag("FLAG{headers_can_be_forged}"),
+            "Challenge 4",
+            hash_flag("flag{H1dd3n_in_not_so_plain_sight}"),
+            250,
+            "why deos my cat look weird",
+            "Forensics",
+            "",
+            "challenge-4/challenge-4.zip",
+        ),
+        (
+            "Challenge 5",
+            hash_flag("flag{h41l_hydr@_1nternal_br33ach}"),
             300,
-            "⚠️ RESTRICTED AREA ⚠️\n\nAccess is strictly limited to internal staff.\n\nREQUIRED CREDENTIALS:\n- Time: Midnight (00:00)\n- Location: Server Room\n- Authorization: Root\n\nDo not attempt to access without these specific headers.",
-            "Web",
-            "/vip-lounge"
-        )
+            "an anomaly happpened in our server. i wonder whats up?",
+            "Forensics",
+            "",
+            "challenge-5/challenge-5.zip",
+        ),
     ]
     
-    for name, flag_hash, points, desc, cat, url in builtin:
-        exists = db.execute(
-            "SELECT id FROM challenges WHERE name = ?", (name,)
-        ).fetchone()
-        
-        if not exists:
-            db.execute(
-                """INSERT INTO challenges (name, flag, points, description, category, target_url) 
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (name, flag_hash, points, desc, cat, url),
-            )
-        else:
-            # Always update metadata (description, category, url) to ensure latest version
-            db.execute(
-                """UPDATE challenges 
-                   SET description = ?, category = ?, target_url = ?
-                   WHERE name = ?""",
-                (desc, cat, url, name)
-            )
+    for name, flag_hash, points, desc, cat, url, dl in templates:
+        db.execute(
+            """INSERT INTO challenges (name, flag, points, description, category, target_url, download_path) 
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (name, flag_hash, points, desc, cat, url, dl),
+        )
 
     # Seed fake employee for the challenge
     employee_exists = db.execute(
@@ -420,7 +406,7 @@ def dashboard():
     # All challenges (name + points only — SECURITY: no flag hashes exposed)
     # Added description and category to the selection
     challenges = db.execute(
-        "SELECT id, name, points, category, description FROM challenges ORDER BY id"
+        "SELECT id, name, points, category, description, download_path FROM challenges ORDER BY id"
     ).fetchall()
 
     # Which challenges this user already solved
@@ -454,7 +440,7 @@ def challenge_detail(challenge_id):
 
     # Fetch challenge details
     challenge = db.execute(
-        "SELECT id, name, description, category, points, flag, target_url FROM challenges WHERE id = ?",
+        "SELECT id, name, description, category, points, flag, target_url, download_path FROM challenges WHERE id = ?",
         (challenge_id,),
     ).fetchone()
 
@@ -470,12 +456,6 @@ def challenge_detail(challenge_id):
     if request.method == "POST":
         submitted_flag = request.form.get("flag", "").strip()
         
-        # Rate limiting logic reused (simplified)
-        if _is_rate_limited(user_id):
-            flash("Too many submissions. Please wait a moment.", "warning")
-            return redirect(url_for("challenge_detail", challenge_id=challenge_id))
-        _record_submission(user_id)
-
         if is_solved:
             flash("You already solved this challenge!", "info")
         elif hash_flag(submitted_flag) == challenge["flag"]:
@@ -541,6 +521,45 @@ def leaderboard():
     return render_template("leaderboard.html", players=players)
 
 # ---------------------------------------------------------------------------
+# Challenge Downloads
+# ---------------------------------------------------------------------------
+
+
+@app.route("/download/<int:challenge_id>")
+@login_required
+def download_challenge(challenge_id):
+    db = get_db()
+    challenge = db.execute(
+        "SELECT id, name, download_path FROM challenges WHERE id = ?",
+        (challenge_id,),
+    ).fetchone()
+
+    if not challenge:
+        abort(404)
+
+    rel_path = (challenge["download_path"] or "").strip()
+    if not rel_path:
+        flash("No download available for this challenge.", "warning")
+        return redirect(url_for("challenge_detail", challenge_id=challenge_id))
+
+    rel_path = os.path.normpath(rel_path).lstrip(os.sep)
+    abs_base = os.path.abspath(DOWNLOADS_DIR)
+    abs_path = os.path.abspath(os.path.join(abs_base, rel_path))
+
+    if not abs_path.startswith(abs_base + os.sep):
+        abort(400)
+
+    if not os.path.isfile(abs_path):
+        flash("Download file is missing on the server.", "danger")
+        return redirect(url_for("challenge_detail", challenge_id=challenge_id))
+
+    return send_from_directory(
+        os.path.dirname(abs_path),
+        os.path.basename(abs_path),
+        as_attachment=True,
+    )
+
+# ---------------------------------------------------------------------------
 # Admin Routes — Login / Logout
 # ---------------------------------------------------------------------------
 
@@ -592,7 +611,7 @@ def admin_panel():
 
     # All challenges (admin sees everything except raw flag — only hash is stored)
     challenges = db.execute(
-        "SELECT id, name, points, category FROM challenges ORDER BY id"
+        "SELECT id, name, points, category, download_path FROM challenges ORDER BY id"
     ).fetchall()
 
     # All submissions
@@ -637,6 +656,7 @@ def add_challenge():
     name = request.form.get("name", "").strip()
     flag = request.form.get("flag", "").strip()
     points = request.form.get("points", type=int)
+    download_path = request.form.get("download_path", "").strip()
 
     if not name or not flag or not points or points < 1:
         flash("All fields are required. Points must be positive.", "danger")
@@ -645,8 +665,8 @@ def add_challenge():
     db = get_db()
     # SECURITY: Flag stored as SHA-256 hash — never plaintext.
     db.execute(
-        "INSERT INTO challenges (name, flag, points) VALUES (?, ?, ?)",
-        (name, hash_flag(flag), points),
+        "INSERT INTO challenges (name, flag, points, download_path) VALUES (?, ?, ?, ?)",
+        (name, hash_flag(flag), points, download_path),
     )
     db.commit()
     flash(f"Challenge '{name}' added ({points} pts).", "success")

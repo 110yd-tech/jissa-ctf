@@ -29,6 +29,15 @@
             </div>
             {% endif %}
 
+            {% if challenge['download_path'] %}
+            <div style="margin-bottom: 1.5rem;">
+                <a href="{{ url_for('download_challenge', challenge_id=challenge['id']) }}"
+                    class="btn btn-success" style="text-decoration: none;">
+                    ⬇️ Download Challenge Files
+                </a>
+            </div>
+            {% endif %}
+
             <!-- Specific hints for challenges -->
             {% if challenge['name'] == 'Midnight VIP Access' %}
             <div
