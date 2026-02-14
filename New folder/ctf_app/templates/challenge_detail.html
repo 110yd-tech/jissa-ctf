@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ challenge['name'] }} — CTF{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 2rem auto;">
+    <a href="{{ url_for('dashboard') }}" style="display:inline-block; margin-bottom: 1rem; font-size: 0.9rem;">← Back to
+        Dashboard</a>
+
+    <div class="card">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+            <div>
+                <span class="badge">{{ challenge['category'] }}</span>
+                <h2 style="margin-top: 0.5rem;">{{ challenge['name'] }}</h2>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--accent2);">{{ challenge['points'] }}</div>
+                <div style="color: var(--muted); font-size: 0.8rem; text-transform: uppercase;">Points</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 2rem; font-size: 1.1rem; line-height: 1.7;">
+            {% if challenge['target_url'] %}
+            <div style="margin-bottom: 1.5rem;">
+                <a href="{{ challenge['target_url'] }}" target="_blank" class="btn btn-primary"
+                    style="text-decoration: none;">
+                    🚀 Start Challenge
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Specific hints for challenges -->
+            {% if challenge['name'] == 'Midnight VIP Access' %}
+            <div
+                style="background: rgba(30, 0, 0, 0.95); border: 4px solid #ff0000; padding: 2rem; border-radius: 8px; margin: 2rem 0; text-align: center; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);">
+                <h2 style="color: #ff0000; margin: 0 0 1.5rem 0; text-transform: uppercase; letter-spacing: 2px;">⚠️
+                    REQUIRED ACCESS HEADERS ⚠️</h2>
+
+                <div
+                    style="display: inline-block; text-align: left; background: #000; color: #00ff00; font-family: 'Courier New', monospace; font-size: 1.4rem; padding: 1.5rem 3rem; border: 2px dashed #00ff00; border-radius: 4px;">
+                    <div>X-Access-Time: 00:00</div>
+                    <div>X-Access-Location: server_room</div>
+                    <div>X-Access-Level: root</div>
+                </div>
+
+                <h3 style="color: #ffcccc; margin-top: 1.5rem; font-weight: bold;">YOU MUST SEND THESE EXACT HEADERS TO
+                    ENTER!</h3>
+                <p style="color: #ff6666; font-size: 1.1rem; margin-top: 0.5rem;">The door is locked unless you identify
+                    yourself correctly.</p>
+            </div>
+            {% endif %}
+
+            {{ challenge['description'] | replace('\n', '<br>') | safe }}
+        </div>
+
+        {% if challenge['name'] == 'Employees Portal Breach' %}
+        <!-- Specific hint logic could go here, or just rely on generic hints if stored in DB -->
+        {% endif %}
+
+        <!-- Custom hints based on challenge name or category could be added here if needed, 
+             or preferably added to the DB description. -->
+
+        <div style="background: var(--surface2); padding: 1.5rem; border-radius: var(--radius); margin-top: 2rem;">
+            {% if is_solved %}
+            <div style="text-align: center; color: var(--green);">
+                <h3 style="margin-bottom: 0.5rem;">🎉 Challenge Solved!</h3>
+                <p>Great job! You have captured this flag.</p>
+                <div style="margin-top: 1rem; opacity: 0.7;">
+                    Enter flag again to update/verify (optional):
+                </div>
+            </div>
+            {% else %}
+            <h3 style="margin-bottom: 1rem;">Submit Flag</h3>
+            {% endif %}
+
+            <form method="POST" style="margin-top: 1rem;">
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" name="flag" placeholder="FLAG{...}" required autocomplete="off" style="flex: 1;">
+                    <button type="submit" class="btn btn-success">Submit Flag</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

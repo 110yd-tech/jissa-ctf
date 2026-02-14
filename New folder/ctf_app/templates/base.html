@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CTF Platform{% endblock %}</title>
+    <style>
+        /* ── Reset & Base ───────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #0f1117;
+            --surface:   #1a1d27;
+            --surface2:  #242836;
+            --border:    #2e3345;
+            --text:      #e2e6f0;
+            --muted:     #8b92a8;
+            --accent:    #6c5ce7;
+            --accent2:   #a29bfe;
+            --green:     #00e676;
+            --red:       #ff5252;
+            --orange:    #ffab40;
+            --blue:      #448aff;
+            --radius:    8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        a { color: var(--accent2); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* ── Navbar ─────────────────────────────────────────── */
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav .brand {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent2);
+            letter-spacing: 2px;
+        }
+        nav .brand span { color: var(--green); }
+        nav .links { display: flex; gap: 1.2rem; align-items: center; }
+        nav .links a {
+            color: var(--muted);
+            font-size: 0.9rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }
+        nav .links a:hover { color: var(--text); background: var(--surface2); text-decoration: none; }
+
+        /* ── Main Content ───────────────────────────────────── */
+        .container {
+            max-width: 960px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* ── Flash Messages ─────────────────────────────────── */
+        .flash {
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+        }
+        .flash.success { background: #00e67620; color: var(--green); border-color: #00e67640; }
+        .flash.danger  { background: #ff525220; color: var(--red);   border-color: #ff525240; }
+        .flash.warning { background: #ffab4020; color: var(--orange); border-color: #ffab4040; }
+        .flash.info    { background: #448aff20; color: var(--blue);  border-color: #448aff40; }
+
+        /* ── Cards ──────────────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h2, .card h3 {
+            margin-bottom: 1rem;
+            color: var(--accent2);
+        }
+
+        /* ── Forms ──────────────────────────────────────────── */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* ── Buttons ────────────────────────────────────────── */
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.4rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent2); }
+        .btn-success { background: var(--green); color: #111; }
+        .btn-success:hover { opacity: 0.85; }
+        .btn-danger  { background: var(--red); color: #fff; }
+        .btn-danger:hover  { opacity: 0.85; }
+        .btn-sm { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
+
+        /* ── Tables ─────────────────────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+        tr:hover { background: var(--surface2); }
+
+        /* ── Badges ─────────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-success { background: #00e67630; color: var(--green); }
+        .badge-danger  { background: #ff525230; color: var(--red); }
+        .badge-solved  { background: #6c5ce730; color: var(--accent2); }
+
+        /* ── Stats Row ──────────────────────────────────────── */
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 140px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-box .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+        .stat-box .label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.2rem;
+        }
+
+        /* ── Challenge Cards ────────────────────────────────── */
+        .challenge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .challenge-info h4 { margin-bottom: 0.2rem; }
+        .challenge-info .pts {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .challenge form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .challenge form input[type="text"] {
+            width: 200px;
+        }
+
+        /* ── Error Page ─────────────────────────────────────── */
+        .error-page {
+            text-align: center;
+            margin-top: 4rem;
+        }
+        .error-page h1 { font-size: 4rem; color: var(--accent); }
+        .error-page p  { color: var(--muted); margin-top: 0.5rem; }
+
+        /* ── Admin Tabs ─────────────────────────────────────── */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .tab {
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+            background: none;
+            border-top: none; border-left: none; border-right: none;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Rank Medals ────────────────────────────────────── */
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+
+        /* ── Responsive ─────────────────────────────────────── */
+        @media (max-width: 600px) {
+            nav { padding: 0 1rem; }
+            .container { padding: 0 1rem; }
+            .challenge { flex-direction: column; align-items: flex-start; }
+            .challenge form input[type="text"] { width: 100%; }
+        }
+
+        /* ── Page Title ─────────────────────────────────────── */
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .page-title .icon { font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="brand">⚑ <span>CTF</span>Platform</div>
+        <div class="links">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+            {% if session.get('is_admin') %}
+                <a href="{{ url_for('admin_panel') }}" style="color:var(--orange);">Admin</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {# Flash messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {# Error page rendering #}
+        {% if error_code %}
+            <div class="error-page">
+                <h1>{{ error_code }}</h1>
+                <p>{{ error_msg }}</p>
+                <br>
+                <a href="{{ url_for('leaderboard') }}" class="btn btn-primary">Go Home</a>
+            </div>
+        {% else %}
+            {% block content %}{% endblock %}
+        {% endif %}
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

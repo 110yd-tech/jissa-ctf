@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — CTF{% endblock %}
+
+{% block content %}
+<div class="page-title"><span class="icon">🏆</span> Leaderboard</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th style="width:60px;">#</th>
+                <th>Player</th>
+                <th style="text-align:right;">Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player in players %}
+            <tr>
+                <td>
+                    <span
+                        class="{% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% endif %}"
+                        style="font-weight:700;">
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}{{ loop.index }}
+                        {% endif %}
+                    </span>
+                </td>
+                <td>{{ player['username'] }}</td>
+                <td style="text-align:right;font-weight:700;color:var(--green);">
+                    {{ player['score'] }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" style="color:var(--muted);text-align:center;">
+                    No players yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

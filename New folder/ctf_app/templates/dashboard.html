@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — CTF{% endblock %}
+
+{% block content %}
+<div class="page-title"><span class="icon">🎯</span> Dashboard</div>
+
+<!-- Player Stats -->
+<div class="stats">
+    <div class="stat-box">
+        <div class="value">{{ user['username'] }}</div>
+        <div class="label">Player</div>
+    </div>
+    <div class="stat-box">
+        <div class="value">{{ user['score'] }}</div>
+        <div class="label">Points</div>
+    </div>
+    <div class="stat-box">
+        <div class="value">#{{ rank }}</div>
+        <div class="label">Rank</div>
+    </div>
+</div>
+
+<!-- Challenges -->
+<div class="card">
+    <h3>⚑ Challenges</h3>
+    <p style="color:var(--muted);font-size:0.8rem;font-style:italic;margin-bottom:1rem;">
+        💡 sometimes robots hide more than they crawl.<br>
+        💡 sometimes authentication trusts too much.
+    </p>
+
+    <div class="challenges-grid">
+        {% if challenges %}
+        {% for ch in challenges %}
+        <a href="{{ url_for('challenge_detail', challenge_id=ch['id']) }}"
+            class="challenge-card {{ 'solved' if ch['id'] in solved_ids else '' }}">
+            <div class="card-header">
+                <h4>{{ ch['name'] }}</h4>
+                <span class="badge">{{ ch['category'] or 'Misc' }}</span>
+            </div>
+            <div class="card-body">
+                <div class="points">{{ ch['points'] }} pts</div>
+                {% if ch['id'] in solved_ids %}
+                <div class="status solved">✔ Solved</div>
+                {% else %}
+                <div class="status">Unsolved</div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+        {% else %}
+        <p style="color:var(--muted);width:100%;">No challenges available yet. Stay tuned!</p>
+        {% endif %}
+    </div>
+
+    <style>
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .challenge-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            display: block;
+            transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none !important;
+        }
+
+        .challenge-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            background: var(--surface2);
+        }
+
+        .challenge-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .challenge-card h4 {
+            color: var(--text);
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .challenge-card .badge {
+            background: var(--surface2);
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        .challenge-card .points {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent2);
+            margin-bottom: 0.5rem;
+        }
+
+        .challenge-card .status {
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .challenge-card.solved {
+            border-color: var(--green);
+        }
+
+        .challenge-card.solved .status.solved {
+            color: var(--green);
+            font-weight: 600;
+        }
+    </style>
+</div>
+{% endblock %}

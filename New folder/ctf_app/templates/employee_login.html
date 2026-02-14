@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Employee Portal — Access Restricted{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto; text-align: center;">
+    <div style="margin-bottom: 2rem;">
+        <span style="font-size: 3rem;">🏢</span>
+        <h2 style="margin-top: 1rem; color: var(--text);">Employee Portal</h2>
+        <p style="color: var(--muted); font-size: 0.9rem;">Authorized Personnel Only</p>
+    </div>
+
+    <div class="card" style="text-align: left;">
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Corporate ID</label>
+                <input type="text" id="username" name="username" placeholder="e.g. jdoe" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Login</button>
+        </form>
+    </div>
+
+    <p style="color: var(--muted); font-size: 0.8rem; margin-top: 2rem;">
+        &copy; 2024 SecureCorp Industries. All rights reserved.<br>
+        Unauthorized access is prohibited and monitored.
+    </p>
+</div>
+{% endblock %}

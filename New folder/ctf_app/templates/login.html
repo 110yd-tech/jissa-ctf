@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Login — CTF{% endblock %}
+
+{% block content %}
+<div class="page-title"><span class="icon">🔐</span> Player Login</div>
+
+<div class="card" style="max-width:440px;">
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required autocomplete="username"
+                placeholder="Your username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password"
+                placeholder="Your password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem;">
+            Log In
+        </button>
+    </form>
+    <p style="margin-top:1rem;font-size:0.85rem;color:var(--muted);">
+        No account? <a href="{{ url_for('register') }}">Register here</a>
+    </p>
+</div>
+{% endblock %}

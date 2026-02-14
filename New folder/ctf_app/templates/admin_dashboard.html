@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — CTF{% endblock %}
+
+{% block content %}
+<div class="page-title"><span class="icon">⚙️</span> Admin Panel</div>
+
+<!-- Tabs Navigation -->
+<div class="tabs">
+    <button class="tab active" onclick="showTab('leaderboard')">Leaderboard</button>
+    <button class="tab" onclick="showTab('users')">Users</button>
+    <button class="tab" onclick="showTab('submissions')">Submissions</button>
+    <button class="tab" onclick="showTab('logs')">Login Logs</button>
+    <button class="tab" onclick="showTab('vip_logs')">VIP Logs</button>
+    <button class="tab" onclick="showTab('challenges')">Challenges</button>
+    <button class="tab" onclick="showTab('adjust')">Adjust Score</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB: VIP Logs
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-vip_logs">
+    <div class="card">
+        <h3>🚨 VIP Access Logs</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>IP</th>
+                    <th>Headers (Time / Loc / Lvl)</th>
+                    <th>Result</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in vip_logs %}
+                <tr>
+                    <td>{{ log['id'] }}</td>
+                    <td style="font-family:monospace;font-size:0.85rem;">{{ log['ip_address'] }}</td>
+                    <td style="font-size:0.8rem;">
+                        <div>T: {{ log['access_time_header'] or '-' }}</div>
+                        <div>L: {{ log['access_location_header'] or '-' }}</div>
+                        <div>Lvl: {{ log['access_level_header'] or '-' }}</div>
+                    </td>
+                    <td>
+                        {% if log['success'] %}
+                        <span class="badge badge-success">ALLOWED</span>
+                        {% else %}
+                        <span class="badge badge-danger">DENIED</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--muted);font-size:0.85rem;">{{ log['timestamp'] }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="color:var(--muted);">No VIP access attempts.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB: Leaderboard
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-leaderboard">
+    <div class="card">
+        <h3>🏆 Leaderboard</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Player</th>
+                    <th>Score</th>
+                    <th>First Solve</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in players %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ p['username'] }}</td>
+                    <td style="color:var(--green);font-weight:700;">{{ p['score'] }}</td>
+                    <td style="color:var(--muted);font-size:0.85rem;">{{ p['first_solve'] or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="color:var(--muted);">No players.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB: Users
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-users">
+    <div class="card">
+        <h3>👥 All Users</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Score</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in players %}
+                <tr>
+                    <td>{{ p['id'] }}</td>
+                    <td>{{ p['username'] }}</td>
+                    <td>{{ p['score'] }}</td>
+                    <td style="color:var(--muted);font-size:0.85rem;">{{ p['created_at'] }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="color:var(--muted);">No users.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB: Submissions
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-submissions">
+    <div class="card">
+        <h3>📋 Submissions</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Player</th>
+                    <th>Challenge</th>
+                    <th>Result</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in submissions %}
+                <tr>
+                    <td>{{ s['id'] }}</td>
+                    <td>{{ s['username'] }}</td>
+                    <td>{{ s['challenge_name'] }}</td>
+                    <td>
+                        {% if s['correct'] %}
+                        <span class="badge badge-success">✓ Correct</span>
+                        {% else %}
+                        <span class="badge badge-danger">✗ Wrong</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--muted);font-size:0.85rem;">{{ s['timestamp'] }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="color:var(--muted);">No submissions yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB: Login Logs
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-logs">
+    <div class="card">
+        <h3>📝 Login Attempts</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>IP</th>
+                    <th>Result</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log['id'] }}</td>
+                    <td>{{ log['username'] }}</td>
+                    <td style="font-family:monospace;font-size:0.85rem;">{{ log['ip_address'] }}</td>
+                    <td>
+                        {% if log['success'] %}
+                        <span class="badge badge-success">OK</span>
+                        {% else %}
+                        <span class="badge badge-danger">FAIL</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--muted);font-size:0.85rem;">{{ log['timestamp'] }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="color:var(--muted);">No login attempts.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB: Add Challenge
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-challenges">
+    <div class="card">
+        <h3>➕ Add Challenge</h3>
+        <form method="POST" action="{{ url_for('add_challenge') }}" style="max-width:480px;">
+            <div class="form-group">
+                <label for="ch-name">Challenge Name</label>
+                <input type="text" id="ch-name" name="name" required placeholder="e.g. Reverse Me">
+            </div>
+            <div class="form-group">
+                <label for="ch-flag">Flag (plaintext — will be hashed)</label>
+                <input type="text" id="ch-flag" name="flag" required placeholder="e.g. CTF{s0m3_fl4g}"
+                    autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="ch-pts">Points</label>
+                <input type="number" id="ch-pts" name="points" required min="1" value="100">
+            </div>
+            <button type="submit" class="btn btn-success">Add Challenge</button>
+        </form>
+    </div>
+
+    {% if challenges %}
+    <div class="card" style="margin-top:1rem;">
+        <h3>📚 Existing Challenges</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ch in challenges %}
+                <tr>
+                    <td>{{ ch['id'] }}</td>
+                    <td>{{ ch['name'] }}</td>
+                    <td>{{ ch['points'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TAB: Adjust Score
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-adjust">
+    <div class="card">
+        <h3>🔧 Adjust User Score</h3>
+        <form method="POST" action="{{ url_for('adjust_score') }}" style="max-width:480px;">
+            <div class="form-group">
+                <label for="adj-uid">User ID</label>
+                <input type="number" id="adj-uid" name="user_id" required min="1" placeholder="Enter user ID">
+            </div>
+            <div class="form-group">
+                <label for="adj-score">New Score</label>
+                <input type="number" id="adj-score" name="new_score" required placeholder="New total score">
+            </div>
+            <button type="submit" class="btn btn-danger">Update Score</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Simple tab switching
+    function showTab(name) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

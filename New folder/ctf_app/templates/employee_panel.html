@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Employee Panel — Welcome{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 2rem auto;">
+    <div class="card" style="border-top: 4px solid var(--accent);">
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;">
+            <h2 style="color: var(--accent2);">Welcome, CEO</h2>
+            <p style="color: var(--muted);">Internal Dashboard v2.0</p>
+        </div>
+
+        <div style="background: var(--surface2); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 2rem;">
+            <h3 style="color: var(--green); margin-bottom: 0.5rem;">✅ Authentication Successful</h3>
+            <p>You have successfully bypassed the employee authentication system.</p>
+        </div>
+
+        <div style="text-align: center; margin: 3rem 0;">
+            <p
+                style="color: var(--muted); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 1rem;">
+                Here is your confidential access flag:
+            </p>
+            <div
+                style="background: #000; color: #0f0; font-family: monospace; font-size: 1.5rem; padding: 1.5rem; border-radius: var(--radius); display: inline-block; border: 1px solid #00ff00;">
+                FLAG{sql_injection_success}
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem; color: var(--muted); font-size: 0.9rem;">
+            <p><strong>Security Notice:</strong> Please report this vulnerability to the IT department immediately.</p>
+        </div>
+
+        <div style="margin-top: 2rem; text-align: center;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
