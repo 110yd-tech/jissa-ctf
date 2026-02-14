@@ -56,8 +56,30 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "ctf.db")
 DOWNLOADS_DIR = os.path.join(BASE_DIR, "downloads")
+
+# Vercel serverless runtime has a read-only filesystem except /tmp
+if os.environ.get("VERCEL"):
+    DATABASE = os.path.join("/tmp", "ctf.db")
+else:
+    DATABASE = os.path.join(BASE_DIR, "ctf.db")
+
+_db_ready = False
+
+
+def ensure_db_ready() -> None:
+    """Initialize schema and seed once per process (serverless-safe)."""
+    global _db_ready
+    if _db_ready:
+        return
+
+    db_existed = os.path.exists(DATABASE)
+    init_db()
+
+    if os.environ.get("VERCEL") and not db_existed:
+        seed_challenges()
+
+    _db_ready = True
 
 # ---------------------------------------------------------------------------
 # Database Helpers
@@ -67,6 +89,7 @@ DOWNLOADS_DIR = os.path.join(BASE_DIR, "downloads")
 def get_db() -> sqlite3.Connection:
     """Open a per-request database connection."""
     if "db" not in g:
+        ensure_db_ready()
         g.db = sqlite3.connect(DATABASE)
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA journal_mode=WAL")
